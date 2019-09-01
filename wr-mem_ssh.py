@@ -9,7 +9,7 @@ USERNAME=getpass.getuser()
 PASSWORD="admin"
 CIPHER="aes128-cbc"
 KEXALGORITHMS="diffie-hellman-group1-sha1"
-CIPHER_ERR="Unable to negotiate with .* port 22: no matching cipher found\.*"
+CIPHER_ERR="Unable to negotiate with .* no matching cipher found\.*"
 
 #-- FUNCTTION DECLARATIONS --#
 def writeConsole(HOST,SSHMETHOD):
