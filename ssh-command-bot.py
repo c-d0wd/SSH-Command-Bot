@@ -11,16 +11,20 @@ CIPHER="aes128-cbc"
 KEXALGORITHMS="diffie-hellman-group1-sha1"
 CIPHER_ERR="Unable to negotiate with .* no matching cipher found\.*"
 
+#Set the commands to send to the devices here
+COMMANDS=["wr mem", "exit"]
+
 #-- FUNCTTION DECLARATIONS --#
 def writeConsole(HOST,SSHMETHOD):
 	#SHOW THE HOST THAT IS BEING CONFIGURED, SEND THE COMMANDS THEN EXIT
 	print("\tBEGIN CONFIGURING HOST: " + HOST)
 	SSHMETHOD.sendline(PASSWORD)
 	login = SSHMETHOD.expect(["#", "Password: "], timeout=15)
+	#Sebd the commands
 	if(login == 0):
-		SSHMETHOD.sendline("wr mem")
-		SSHMETHOD.sendline("exit")
-		print ("\tDONE CONFIGURING HOST: " + HOST)
+		for command in COMMANDS:
+			SSHMETHOD.sendline(command)
+			print ("\tDONE CONFIGURING HOST: " + HOST)
 		return
 	elif(login == 1):
 		print("\tUsername or Password for " + HOST + " is incorrect exiting...")
