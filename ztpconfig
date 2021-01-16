@@ -1,0 +1,202 @@
+#######################################################
+#
+#
+#
+ztp set suffix -confg
+ztp set initialfilename network-confg
+ztp set community secretcommunity
+ztp set tftproot /etc/ztp/tftproot/
+ztp set imagediscoveryfile freeztp_ios_upgrade
+ztp set file-cache-timeout 10
+ztp set snmpoid WS_C3850_SERIAL_NUMBER 1.3.6.1.2.1.47.1.1.1.1.11.1000
+ztp set snmpoid WS_C2960_SERIAL_NUMBER 1.3.6.1.2.1.47.1.1.1.1.11.1001
+ztp set logging merged-config-to-mainlog enable
+ztp set logging merged-config-to-custom-file disable
+#
+#
+ztp set initial-template ^
+hostname {{ autohostname }}
+!
+snmp-server community {{ community }} RO
+!
+end
+^
+#
+#
+#
+#######################################################
+#
+#
+#
+ztp set dhcpd-option ztp-tftp-address code 150 type ip-address
+#
+#
+#
+ztp set dhcpd INTERFACE-ENS33 subnet 172.16.0.0/24
+ztp set dhcpd INTERFACE-ENS33 imagediscoveryfile-option enable
+ztp set dhcpd INTERFACE-ENS33 ztp-tftp-address 172.16.0.2
+ztp set dhcpd INTERFACE-ENS33 lease-time 3600
+ztp set dhcpd INTERFACE-ENS33 last-address 172.16.0.254
+ztp set dhcpd INTERFACE-ENS33 first-address 172.16.0.200
+#
+#
+#
+#######################################################
+#
+#
+#
+ztp set template TEST_TEMPLATE ^
+service password-encryption
+!
+hostname {{ hostname }}
+!
+no logging console
+!
+username cisco privilege 15 password 0 cisco
+ip routing
+no ip domain-lookup
+!
+vlan 100
+name coolkids
+!
+interface FastEthernet0/1
+ description Port1
+!
+interface FastEthernet0/2
+ description Port2
+!
+interface FastEthernet0/3
+!
+interface FastEthernet0/4
+!
+interface FastEthernet0/5
+!         
+interface FastEthernet0/6
+!
+interface FastEthernet0/7
+!
+interface FastEthernet0/8
+!
+interface GigabitEthernet0/1
+!
+interface Vlan1
+ ip address {{ vl1_ip_address }} {{ vl1_netmask }}
+!         
+line con 0
+ logging synchronous
+line vty 0 4
+ login local
+ logging synchronous
+line vty 5 15
+ login local
+ logging synchronous
+!
+copy run start
+!
+end
+^
+#
+#
+#
+#######################################################
+#
+#
+#
+ztp set template SHORT_TEMPLATE ^
+hostname {{ hostname }}
+!
+interface Vlan1
+ ip address {{ vl1_ip_address }} 255.255.255.0
+ no shut
+!
+end
+^
+#
+#
+#
+#######################################################
+#
+#
+#
+ztp set template LONG_TEMPLATE ^
+hostname {{ hostname }}
+!
+interface Vlan1
+ ip address {{ vl1_ip_address }} {{ vl1_netmask }}
+ no shut
+!
+!{% for interface in range(1,49) %}
+interface GigabitEthernet1/0/{{interface}}
+ description User Port (VLAN 1)
+ switchport access vlan 1
+ switchport mode access
+ no shutdown
+!{% endfor %}
+!
+ip domain-name test.com
+!
+username admin privilege 15 secret password123
+!
+aaa new-model
+!
+!
+aaa authentication login CONSOLE local
+aaa authorization console
+aaa authorization exec default local if-authenticated
+!
+crypto key generate rsa modulus 2048
+!
+ip ssh version 2
+!
+line vty 0 15
+login authentication default
+transport input ssh
+line console 0
+login authentication CONSOLE
+end
+^
+#
+#
+#
+#######################################################
+#
+#
+#
+ztp set keystore DEFAULT_VALUES vl1_ip_address dhcp
+ztp set keystore DEFAULT_VALUES hostname UNKNOWN_HOST
+#
+ztp set keystore SERIAL100 vl1_ip_address 10.0.0.201
+ztp set keystore SERIAL100 hostname SOMEDEVICE
+#
+ztp set keystore STACK1 vl1_netmask 255.255.255.0
+ztp set keystore STACK1 vl1_ip_address 10.0.0.200
+ztp set keystore STACK1 hostname CORESWITCH
+#
+#
+#
+ztp set idarray STACK1 SERIAL1 SERIAL2 SERIAL3
+#
+#
+#
+ztp set association id SERIAL100 template SHORT_TEMPLATE
+ztp set association id STACK1 template LONG_TEMPLATE
+#
+#
+#
+ztp set default-keystore DEFAULT_VALUES
+ztp set default-template LONG_TEMPLATE
+ztp set imagefile cat3k_caa-universalk9.SPA.03.06.06.E.152-2.E6.bin
+ztp set image-supression 3600
+ztp set delay-keystore 1000
+#
+#
+#
+ztp set external-keystore TESTEXTERNAL type csv
+ztp set external-keystore TESTEXTERNAL file '/root/ztp_keystore.csv'
+#
+#
+#
+#
+#
+#
+#######################################################
